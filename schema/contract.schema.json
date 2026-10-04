@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/taras-polishchuk/agent-contracts/schema/contract.schema.json",
+  "title": "AgentContract",
+  "description": "YAML frontmatter for a specialist or orchestrator contract.",
+  "type": "object",
+  "required": ["id", "type", "use_when", "primary_sources", "success_signals"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*[a-z0-9]$",
+      "description": "Unique slug. Lowercase, kebab-case."
+    },
+    "type": {
+      "type": "string",
+      "enum": ["orchestrator", "specialist"]
+    },
+    "domain": {
+      "type": "string",
+      "description": "Required when type=specialist. Short noun phrase."
+    },
+    "default_entry": {
+      "type": "boolean",
+      "description": "Required when type=orchestrator. Exactly one contract in the repo sets this to true."
+    },
+    "use_when": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "primary_sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Generic categories. Avoid binding to absolute paths."
+    },
+    "delegates_to": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" },
+      "description": "Required when type=orchestrator. IDs of specialists it can route to."
+    },
+    "collaborates_with": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" },
+      "description": "Required when type=specialist. IDs of peer specialists."
+    },
+    "success_signals": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "orchestrator" } } },
+      "then": {
+        "required": ["default_entry", "delegates_to"],
+        "properties": {
+          "collaborates_with": false
+        }
+      }
+    },
+    {
+      "if": { "properties": { "type": { "const": "specialist" } } },
+      "then": {
+        "required": ["domain", "collaborates_with"],
+        "properties": {
+          "default_entry": false,
+          "delegates_to": false
+        }
+      }
+    }
+  ]
+}
